@@ -1,21 +1,19 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
-import { useToast } from '@/hooks/use-toast';
 
-const API_URL = 'https://functions.poehali.dev/15ecedae-aed8-43f6-b170-7dd2a0c84f49';
 
 const CLINIC_IMG = 'https://cdn.poehali.dev/projects/7b4028d6-c2bf-4eeb-ac81-1ac147528750/files/eedd8241-6148-4a92-a383-607aee328abe.jpg';
 const DOCTOR_IMG = 'https://cdn.poehali.dev/projects/7b4028d6-c2bf-4eeb-ac81-1ac147528750/files/5dc7e688-6183-4752-a59b-2082205bfda7.jpg';
 
-type Tab = 'home' | 'services' | 'doctors' | 'chat' | 'profile';
+type Tab = 'home' | 'booking' | 'doctors' | 'chat' | 'profile';
 
 const services = [
-  { icon: 'Sparkles', name: 'Биоревитализация', desc: 'Глубокое увлажнение кожи', price: 'от 9 500 ₽', dur: '45 мин' },
-  { icon: 'Syringe', name: 'Контурная пластика', desc: 'Коррекция объёмов лица', price: 'от 18 000 ₽', dur: '60 мин' },
-  { icon: 'Droplets', name: 'Мезотерапия', desc: 'Питание и сияние кожи', price: 'от 7 000 ₽', dur: '40 мин' },
-  { icon: 'Zap', name: 'Лазерное омоложение', desc: 'Аппаратная косметология', price: 'от 12 000 ₽', dur: '50 мин' },
-  { icon: 'Flower2', name: 'Ботулинотерапия', desc: 'Разглаживание морщин', price: 'от 8 500 ₽', dur: '30 мин' },
-  { icon: 'Gem', name: 'Чистка лица', desc: 'Уход и очищение', price: 'от 5 000 ₽', dur: '60 мин' },
+  { icon: 'Sparkles', name: 'Биоревитализация', price: 'от 9 500 ₽' },
+  { icon: 'Syringe', name: 'Контурная пластика', price: 'от 18 000 ₽' },
+  { icon: 'Droplets', name: 'Мезотерапия', price: 'от 7 000 ₽' },
+  { icon: 'Zap', name: 'Лазерное омоложение', price: 'от 12 000 ₽' },
+  { icon: 'Flower2', name: 'Ботулинотерапия', price: 'от 8 500 ₽' },
+  { icon: 'Gem', name: 'Чистка лица', price: 'от 5 000 ₽' },
 ];
 
 const doctors = [
@@ -30,7 +28,7 @@ const visits = [
   { date: '14 мая 2026', service: 'Мезотерапия', doctor: 'Елена Соколова', status: 'Завершено' },
 ];
 
-const timeSlots = ['10:00', '11:30', '13:00', '14:30', '16:00', '17:30', '19:00'];
+
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -43,44 +41,10 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export default function Index() {
-  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('home');
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [booking, setBooking] = useState<{ doctor: string; time: string } | null>(null);
-  const [form, setForm] = useState({ name: '', phone: '' });
-  const [sending, setSending] = useState(false);
   const [chatInput, setChatInput] = useState('');
-
-  const submitBooking = async () => {
-    if (!form.name.trim() || !form.phone.trim() || !booking) {
-      toast({ title: 'Заполните имя и телефон', variant: 'destructive' });
-      return;
-    }
-    setSending(true);
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_name: form.name,
-          phone: form.phone,
-          doctor: booking.doctor,
-          appointment_time: booking.time,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast({ title: 'Вы записаны!', description: `${booking.doctor}, ${booking.time}. Администратор свяжется с вами.` });
-      setBooking(null);
-      setForm({ name: '', phone: '' });
-      setSelectedTime(null);
-    } catch {
-      toast({ title: 'Не удалось записаться', description: 'Попробуйте ещё раз', variant: 'destructive' });
-    } finally {
-      setSending(false);
-    }
-  };
   const [messages, setMessages] = useState([
-    { from: 'doc', text: 'Здравствуйте! Я администратор клиники SPB Estetic. Чем могу помочь?' },
+    { from: 'doc', text: 'Здравствуйте! Я администратор клиники Клиник Эстетик. Чем могу помочь?' },
   ]);
 
   const sendMessage = () => {
@@ -94,7 +58,7 @@ export default function Index() {
 
   const nav: { id: Tab; icon: string; label: string }[] = [
     { id: 'home', icon: 'Home', label: 'Главная' },
-    { id: 'services', icon: 'Sparkles', label: 'Услуги' },
+    { id: 'booking', icon: 'CalendarPlus', label: 'Запись' },
     { id: 'doctors', icon: 'Stethoscope', label: 'Врачи' },
     { id: 'chat', icon: 'MessageCircle', label: 'Чат' },
     { id: 'profile', icon: 'User', label: 'Профиль' },
@@ -106,10 +70,10 @@ export default function Index() {
         {/* Top bar */}
         <header className="glass sticky top-0 z-20 px-6 pt-6 pb-4 flex items-center justify-between border-b border-border/40">
           <div>
-            <p className="text-xs tracking-[0.3em] text-gold font-medium">SPB ESTETIC</p>
+            <p className="text-xs tracking-[0.3em] text-gold font-medium">КЛИНИК ЭСТЕТИК</p>
             <h1 className="font-display text-2xl font-semibold leading-tight">
               {tab === 'home' && 'Эстетика красоты'}
-              {tab === 'services' && 'Наши услуги'}
+              {tab === 'booking' && 'Онлайн-запись'}
               {tab === 'doctors' && 'Специалисты'}
               {tab === 'chat' && 'Консультация'}
               {tab === 'profile' && 'Личный кабинет'}
@@ -137,10 +101,10 @@ export default function Index() {
               </div>
 
               <div className="px-6 mt-6">
-                <button onClick={() => setTab('services')} className="w-full bg-gold-gradient text-white rounded-2xl p-5 flex items-center justify-between shadow-gold hover-scale transition-transform">
+                <button onClick={() => setTab('booking')} className="w-full bg-gold-gradient text-white rounded-2xl p-5 flex items-center justify-between shadow-gold hover-scale transition-transform">
                   <div className="text-left">
                     <p className="font-display text-xl font-semibold">Записаться онлайн</p>
-                    <p className="text-white/85 text-sm">Выберите услугу и удобное время</p>
+                    <p className="text-white/85 text-sm">Реальное расписание врачей клиники</p>
                   </div>
                   <Icon name="ArrowRight" size={24} />
                 </button>
@@ -149,7 +113,7 @@ export default function Index() {
               <div className="px-6 mt-7">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-display text-xl font-semibold">Популярные услуги</h2>
-                  <button onClick={() => setTab('services')} className="text-gold text-sm font-medium">Все</button>
+                  <button onClick={() => setTab('booking')} className="text-gold text-sm font-medium">Все</button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {services.slice(0, 4).map((s) => (
@@ -183,27 +147,19 @@ export default function Index() {
             </div>
           )}
 
-          {/* SERVICES */}
-          {tab === 'services' && (
-            <div className="px-6 pt-5 animate-fade-in space-y-3">
-              {services.map((s) => (
-                <div key={s.name} className="bg-card rounded-2xl p-4 shadow-luxe border border-border/40 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0">
-                    <Icon name={s.icon} size={22} className="text-gold-dark" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-muted-foreground text-xs">{s.desc}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-gold-dark font-semibold text-sm">{s.price}</span>
-                      <span className="text-muted-foreground text-xs flex items-center gap-1"><Icon name="Clock" size={12} />{s.dur}</span>
-                    </div>
-                  </div>
-                  <button onClick={() => setTab('doctors')} className="w-10 h-10 rounded-full bg-gold-gradient text-white flex items-center justify-center shrink-0 shadow-gold">
-                    <Icon name="Plus" size={20} />
-                  </button>
-                </div>
-              ))}
+          {/* BOOKING — реальный виджет YClients */}
+          {tab === 'booking' && (
+            <div className="animate-fade-in flex flex-col" style={{ height: 'calc(100vh - 160px)' }}>
+              <div className="px-6 pt-4 pb-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <Icon name="CalendarCheck" size={15} className="text-gold-dark" />
+                Выберите услугу, врача и удобное время
+              </div>
+              <iframe
+                src="https://n1376727.yclients.com/company/1142189/personal/menu?o="
+                className="flex-1 w-full border-0"
+                title="Онлайн-запись Клиник Эстетик"
+                allow="payment"
+              />
             </div>
           )}
 
@@ -226,29 +182,11 @@ export default function Index() {
                     </div>
                   </div>
                   <div className="px-4 pb-4">
-                    <p className="text-xs text-muted-foreground mb-2">Свободное время сегодня</p>
-                    <div className="flex flex-wrap gap-2">
-                      {timeSlots.map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setSelectedTime(`${d.name}-${t}`)}
-                          className={`px-3.5 py-1.5 rounded-full text-sm border transition-colors ${
-                            selectedTime === `${d.name}-${t}`
-                              ? 'bg-gold-gradient text-white border-transparent shadow-gold'
-                              : 'bg-secondary border-border text-foreground'
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
                     <button
-                      onClick={() => {
-                        const time = selectedTime?.startsWith(`${d.name}-`) ? selectedTime.split('-').pop()! : timeSlots[0];
-                        setBooking({ doctor: d.name, time });
-                      }}
-                      className="w-full mt-4 bg-primary text-primary-foreground rounded-xl py-3 font-medium hover-scale transition-transform"
+                      onClick={() => setTab('booking')}
+                      className="w-full bg-gold-gradient text-white rounded-xl py-3 font-medium shadow-gold hover-scale transition-transform flex items-center justify-center gap-2"
                     >
+                      <Icon name="CalendarPlus" size={18} />
                       Записаться на приём
                     </button>
                   </div>
@@ -346,48 +284,7 @@ export default function Index() {
           ))}
         </nav>
 
-        {/* Booking modal */}
-        {booking && (
-          <div className="fixed inset-0 z-30 flex items-end justify-center">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setBooking(null)} />
-            <div className="relative w-full max-w-[440px] bg-card rounded-t-3xl p-6 shadow-luxe animate-fade-in">
-              <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-5" />
-              <h3 className="font-display text-2xl font-semibold">Запись на приём</h3>
-              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                <Icon name="Stethoscope" size={15} className="text-gold-dark" /> {booking.doctor}
-                <span className="mx-1">·</span>
-                <Icon name="Clock" size={15} className="text-gold-dark" /> сегодня в {booking.time}
-              </div>
 
-              <div className="mt-5 space-y-3">
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Ваше имя"
-                  className="w-full bg-secondary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold/40"
-                />
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="Телефон"
-                  inputMode="tel"
-                  className="w-full bg-secondary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold/40"
-                />
-              </div>
-
-              <button
-                onClick={submitBooking}
-                disabled={sending}
-                className="w-full mt-5 bg-gold-gradient text-white rounded-xl py-3.5 font-medium shadow-gold hover-scale transition-transform disabled:opacity-60"
-              >
-                {sending ? 'Отправляем…' : 'Подтвердить запись'}
-              </button>
-              <button onClick={() => setBooking(null)} className="w-full mt-2 py-2 text-sm text-muted-foreground">
-                Отмена
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
