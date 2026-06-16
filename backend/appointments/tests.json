@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Создание записи",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "client_name": "Тест Клиент",
+        "phone": "+7 900 000 00 00",
+        "doctor": "Елена Соколова",
+        "service": "Биоревитализация",
+        "appointment_time": "14:30",
+        "comment": "Тестовая запись"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {"success": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Список записей",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

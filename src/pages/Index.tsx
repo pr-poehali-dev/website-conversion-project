@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
+import { useToast } from '@/hooks/use-toast';
+
+const API_URL = 'https://functions.poehali.dev/15ecedae-aed8-43f6-b170-7dd2a0c84f49';
 
 const CLINIC_IMG = 'https://cdn.poehali.dev/projects/7b4028d6-c2bf-4eeb-ac81-1ac147528750/files/eedd8241-6148-4a92-a383-607aee328abe.jpg';
 const DOCTOR_IMG = 'https://cdn.poehali.dev/projects/7b4028d6-c2bf-4eeb-ac81-1ac147528750/files/5dc7e688-6183-4752-a59b-2082205bfda7.jpg';
@@ -40,9 +43,42 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export default function Index() {
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>('home');
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [booking, setBooking] = useState<{ doctor: string; time: string } | null>(null);
+  const [form, setForm] = useState({ name: '', phone: '' });
+  const [sending, setSending] = useState(false);
   const [chatInput, setChatInput] = useState('');
+
+  const submitBooking = async () => {
+    if (!form.name.trim() || !form.phone.trim() || !booking) {
+      toast({ title: 'Заполните имя и телефон', variant: 'destructive' });
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name: form.name,
+          phone: form.phone,
+          doctor: booking.doctor,
+          appointment_time: booking.time,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: 'Вы записаны!', description: `${booking.doctor}, ${booking.time}. Администратор свяжется с вами.` });
+      setBooking(null);
+      setForm({ name: '', phone: '' });
+      setSelectedTime(null);
+    } catch {
+      toast({ title: 'Не удалось записаться', description: 'Попробуйте ещё раз', variant: 'destructive' });
+    } finally {
+      setSending(false);
+    }
+  };
   const [messages, setMessages] = useState([
     { from: 'doc', text: 'Здравствуйте! Я администратор клиники SPB Estetic. Чем могу помочь?' },
   ]);
@@ -206,7 +242,13 @@ export default function Index() {
                         </button>
                       ))}
                     </div>
-                    <button className="w-full mt-4 bg-primary text-primary-foreground rounded-xl py-3 font-medium hover-scale transition-transform">
+                    <button
+                      onClick={() => {
+                        const time = selectedTime?.startsWith(`${d.name}-`) ? selectedTime.split('-').pop()! : timeSlots[0];
+                        setBooking({ doctor: d.name, time });
+                      }}
+                      className="w-full mt-4 bg-primary text-primary-foreground rounded-xl py-3 font-medium hover-scale transition-transform"
+                    >
                       Записаться на приём
                     </button>
                   </div>
@@ -303,6 +345,49 @@ export default function Index() {
             </button>
           ))}
         </nav>
+
+        {/* Booking modal */}
+        {booking && (
+          <div className="fixed inset-0 z-30 flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setBooking(null)} />
+            <div className="relative w-full max-w-[440px] bg-card rounded-t-3xl p-6 shadow-luxe animate-fade-in">
+              <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-5" />
+              <h3 className="font-display text-2xl font-semibold">Запись на приём</h3>
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <Icon name="Stethoscope" size={15} className="text-gold-dark" /> {booking.doctor}
+                <span className="mx-1">·</span>
+                <Icon name="Clock" size={15} className="text-gold-dark" /> сегодня в {booking.time}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Ваше имя"
+                  className="w-full bg-secondary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold/40"
+                />
+                <input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Телефон"
+                  inputMode="tel"
+                  className="w-full bg-secondary rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold/40"
+                />
+              </div>
+
+              <button
+                onClick={submitBooking}
+                disabled={sending}
+                className="w-full mt-5 bg-gold-gradient text-white rounded-xl py-3.5 font-medium shadow-gold hover-scale transition-transform disabled:opacity-60"
+              >
+                {sending ? 'Отправляем…' : 'Подтвердить запись'}
+              </button>
+              <button onClick={() => setBooking(null)} className="w-full mt-2 py-2 text-sm text-muted-foreground">
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
